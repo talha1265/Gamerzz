@@ -1,0 +1,94 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gaming Tournament</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const dateInput = document.querySelector('input[name="date"]');
+      const slotSelect = document.querySelector('select[name="slot"]');
+
+      function updateSlotsForDate(date) {
+        fetch('check_slots.php?date=' + date)
+          .then(response => response.json())
+          .then(data => {
+            for (const option of slotSelect.options) {
+              if (option.value === '') continue;
+              option.disabled = false;
+              option.textContent = option.textContent.replace(' (Full)', '');
+              if (data[option.value] >= 4) {
+                option.disabled = true;
+                option.textContent += ' (Full)';
+              }
+            }
+          });
+      }
+
+      dateInput.addEventListener('change', (e) => {
+        const selectedDate = e.target.value;
+        if (selectedDate) {
+          updateSlotsForDate(selectedDate);
+        }
+      });
+    });
+  </script>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-container">
+      <h1>GameZone</h1>
+      <ul>
+        <li><a href="#home">Home</a></li>
+        <li><a href="#register">Register</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero" id="home">
+    <div class="hero-overlay">
+      <div class="hero-content">
+        <h1>Love Free Fire or BGMI? Join our action-packed tournament with just ₹200 entry per person!</h1>
+        <h1>Won the match and earn ₹1800</h1>
+        <a href="#register"><button class="hero-btn">Register Now</button></a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Registration Form -->
+  <section id="register" class="form-section">
+    <form action="payment.php" method="POST">
+      <h2>Register for the Tournament</h2>
+      <input type="text" name="name" placeholder="Your Name" required>
+      <input type="email" name="email" placeholder="Email Address" required>
+      <input type="date" name="date" required>
+      <select name="slot" required>
+        <option value="">Select Time Slot</option>
+        <option value="10am">10:00 AM</option>
+        <option value="12pm">12:00 PM</option>
+        <option value="2pm">2:00 PM</option>
+      </select>
+      <button type="submit">Pay ₹200 Per Person & Register</button>
+    </form>
+  </section>
+
+
+  <!-- Banner Section -->
+  <section class="banner-section">
+    <div class="banner">
+      <h3>Don't miss the action!</h3>
+      <p>Subscribe to our YouTube channel and watch the matches live.</p>
+      <a href="https://www.youtube.com/" target="_blank"><button class="hero-btn">Watch Live</button></a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>&copy; 2025 GameZone. All rights reserved.</p>
+  </footer>
+</body>
+</html>
