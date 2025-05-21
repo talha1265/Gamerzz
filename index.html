@@ -15,14 +15,35 @@
         fetch('check_slots.php?date=' + date)
           .then(response => response.json())
           .then(data => {
+            let fullCount = 0;
+
             for (const option of slotSelect.options) {
               if (option.value === '') continue;
+
               option.disabled = false;
-              option.textContent = option.textContent.replace(' (Full)', '');
-              if (data[option.value] >= 4) {
-                option.disabled = true;
-                option.textContent += ' (Full)';
+              option.textContent = option.textContent.replace(/ \(Full\)| \(Unavailable\)/g, '');
+
+              const slotData = data[option.value];
+
+              if (slotData) {
+                const isFull = slotData.count >= 16;
+                const isExpired = slotData.expired;
+
+                if (isFull || isExpired) {
+                  option.disabled = true;
+                  option.textContent += ' (Unavailable)';
+                  fullCount++;
+                }
               }
+            }
+
+            // If all 3 slots are full, disable date picker and slot dropdown
+            if (fullCount >= 3) {
+              dateInput.setCustomValidity("All slots are full for this date");
+              slotSelect.disabled = true;
+            } else {
+              dateInput.setCustomValidity("");
+              slotSelect.disabled = false;
             }
           });
       }
@@ -52,13 +73,50 @@
   <header class="hero" id="home">
     <div class="hero-overlay">
       <div class="hero-content">
-        <h1>Love Free Fire or BGMI? Join our action-packed tournament with just ₹200 entry per person!</h1>
-        <h1>Won the match and earn ₹1800</h1>
+        <h1>Love Free Fire or BGMI? Join our action-packed tournament with just ₹199 entry per person!</h1>
+        <h1>Win and earn ₹1800</h1>
         <a href="#register"><button class="hero-btn">Register Now</button></a>
       </div>
     </div>
   </header>
 
+  <section class="tournament-info">
+    <div class="info-container">
+      <div class="card">
+        <h2>₹199 Entry/person - Win ₹1800</h2>
+        <p>Available on Monday, Wednesday & Friday</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Day</th>
+              <th>Matches</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Monday</td><td>6 Matches</td></tr>
+            <tr><td>Wednesday</td><td>6 Matches</td></tr>
+            <tr><td>Friday</td><td>6 Matches</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h2>₹75 Entry/person - Win ₹650</h2>
+        <p>Only on Saturday</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Day</th>
+              <th>Matches</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Saturday</td><td>10 Matches</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+  
   <!-- Registration Form -->
   <section id="register" class="form-section">
     <form action="payment.php" method="POST">
@@ -75,7 +133,6 @@
       <button type="submit">Pay ₹200 Per Person & Register</button>
     </form>
   </section>
-
 
   <!-- Banner Section -->
   <section class="banner-section">
