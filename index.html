@@ -80,7 +80,7 @@
     </div>
   </header>
 
-  <!-- Tournament Info Section -->
+ <!-- Tournament Info Section -->
 <section class="tournament-info">
     <h2>Upcoming Weekly Matches</h2>
     <div class="tournament-cards">
@@ -134,13 +134,25 @@
     </div>
   </section>
   
+  
   <!-- Registration Form -->
   <section id="register" class="form-section">
     <form action="payment.php" method="POST">
       <h2>Register for the Tournament</h2>
       <input type="text" name="name" placeholder="Your Name" required>
       <input type="email" name="email" placeholder="Email Address" required>
-      <input type="date" name="date" required>
+      <select name="category" id="category" required>
+        <option value="">Select Category</option>
+        <option value="pro">Pro (₹796 / 4 players)</option>
+        <option value="beginners">Beginners (₹300 / 4 players)</option>
+      </select>
+      
+      
+      <select name="date" id="date" required>
+        <option value="">Select Date</option>
+        <!-- Options will be dynamically filled by JavaScript -->
+      </select>
+      
       <select name="slot" required>
         <option value="">Select Time Slot</option>
         <option value="3pm">3:00 PM</option>
@@ -150,7 +162,7 @@
         <option value="7pm">7:00 PM</option>
         <option value="8pm">8:00 PM</option>
       </select>
-      <button type="submit">Pay ₹200 Per Person & Register</button>
+      <button type="submit">Pay & Register</button>
     </form>
   </section>
 
@@ -167,5 +179,117 @@
   <footer class="footer">
     <p>&copy; 2025 GameZone. All rights reserved.</p>
   </footer>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const categorySelect = document.getElementById("category");
+      const dateSelect = document.getElementById("date");
+      const submitButton = document.querySelector('form button');
+      const slotSelect = document.querySelector('select[name="slot"]');
+      const dateInput = dateSelect; // same reference for validation
+  
+      // ✅ Helper: get upcoming specific weekdays (like Mon/Wed/Fri/Sat)
+      function getUpcomingDays(dayNames, limit = 6) {
+        const daysMap = {
+          'Sunday': 0,
+          'Monday': 1,
+          'Tuesday': 2,
+          'Wednesday': 3,
+          'Thursday': 4,
+          'Friday': 5,
+          'Saturday': 6
+        };
+  
+        const today = new Date();
+        const result = [];
+        let found = 0;
+        let checkDate = new Date();
+  
+        while (found < limit) {
+          const dayName = Object.keys(daysMap).find(key => daysMap[key] === checkDate.getDay());
+          if (dayNames.includes(dayName)) {
+            const dateStr = checkDate.toISOString().split('T')[0];
+            result.push({ label: `${dayName} - ${dateStr}`, value: dateStr });
+            found++;
+          }
+          checkDate.setDate(checkDate.getDate() + 1);
+        }
+  
+        return result;
+      }
+  
+      // ✅ Handle category change
+      categorySelect.addEventListener('change', () => {
+        const selected = categorySelect.value;
+        dateSelect.innerHTML = '<option value="">Select Date</option>';
+  
+        // Update button text
+        if (selected === 'pro') {
+          submitButton.textContent = "Pay ₹796 for Pro Category (4 Players)";
+          const dates = getUpcomingDays(['Monday', 'Wednesday', 'Friday'], 6);
+          dates.forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d.value;
+            opt.textContent = d.label;
+            dateSelect.appendChild(opt);
+          });
+        } else if (selected === 'beginners') {
+          submitButton.textContent = "Pay ₹300 for Beginners Category (4 Players)";
+          const dates = getUpcomingDays(['Saturday'], 6);
+          dates.forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d.value;
+            opt.textContent = d.label;
+            dateSelect.appendChild(opt);
+          });
+        } else {
+          submitButton.textContent = "Pay & Register";
+        }
+      });
+  
+      // ✅ Update slot availability when date is selected
+      dateSelect.addEventListener('change', (e) => {
+        const selectedDate = e.target.value;
+        if (!selectedDate) return;
+  
+        fetch('check_slots.php?date=' + selectedDate)
+          .then(response => response.json())
+          .then(data => {
+            let fullCount = 0;
+  
+            for (const option of slotSelect.options) {
+              if (option.value === '') continue;
+  
+              option.disabled = false;
+              option.textContent = option.textContent.replace(/ \(Unavailable\)/g, '');
+  
+              const slotData = data[option.value];
+  
+              if (slotData) {
+                const isFull = slotData.count >= 16;
+                const isExpired = slotData.expired;
+  
+                if (isFull || isExpired) {
+                  option.disabled = true;
+                  option.textContent += ' (Unavailable)';
+                  fullCount++;
+                }
+              }
+            }
+  
+            if (fullCount >= 3) {
+              dateInput.setCustomValidity("All slots are full for this date");
+              slotSelect.disabled = true;
+            } else {
+              dateInput.setCustomValidity("");
+              slotSelect.disabled = false;
+            }
+          });
+      });
+    });
+  </script>
+  
+
+  
+  
 </body>
 </html>
